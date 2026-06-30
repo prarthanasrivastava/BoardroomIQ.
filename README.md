@@ -1,81 +1,270 @@
 # BoardroomIQ
 
-BoardroomIQ is an autonomous multi-agent business intelligence platform that analyzes uploaded business CSVs, debates evidence, verifies claims, and produces explainable executive recommendations.
+**Autonomous Multi-Agent Business Intelligence Platform for Evidence-Based Executive Decision Making**
 
-## MVP Features
+BoardroomIQ turns business spreadsheets into an AI-powered board meeting. Instead of producing a single generic chatbot answer, it profiles the uploaded data, routes the question to specialized agents, verifies claims with computed evidence, ranks the strongest causes, and produces an executive decision brief.
 
-- Upload or use sample datasets for sales, customers, inventory, and marketing.
-- Upload one or more CSV/Excel files and let BoardroomIQ decide which agents can run.
-- Analyze single business sheets such as customer onboarding, bookings, conversions, and CAC.
-- Run specialized Finance, Marketing, Operations, and Risk agents.
-- Generate a board meeting timeline from planning to CEO summary.
-- Debate and verify agent claims using computed evidence.
-- Rank likely causes with confidence scores.
-- Forecast near-term revenue and inventory risk with simple trend analytics.
+## Why This Project
 
-## How To Run The Streamlit MVP
+Most CSV chatbots answer from one general model perspective.
 
-```bash
-pip install -r requirements.txt
-streamlit run app.py
+BoardroomIQ works more like a structured decision-intelligence system:
+
+```text
+Business Question
+        |
+Uploaded CSV / Excel Data
+        |
+Data Profiler Agent
+        |
+Planner + Specialist Agents
+        |
+Debate + Verification
+        |
+Judge + Forecast
+        |
+CEO Decision Brief
 ```
 
-## How To Run The Product UI
+Example question:
 
-Start the FastAPI backend:
+> Why did revenue drop this quarter and what should we do?
 
-```bash
-.\.venv\Scripts\python.exe -m uvicorn boardroomiq.api:app --reload --port 8000
-```
+BoardroomIQ can analyze sales, customer, inventory, marketing, or onboarding data and return:
 
-Start the React frontend in a second terminal:
+- ranked business causes
+- supporting evidence
+- confidence scores
+- risk labels
+- forecast/trend signals
+- recommended next actions
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+## Key Features
 
-Open `http://localhost:5173`.
+- **Flexible CSV/Excel Uploads**  
+  Supports `.csv`, `.xlsx`, `.xls`, single-sheet files, and multi-sheet Excel workbooks.
 
-On Windows PowerShell, use `npm.cmd` if script execution is blocked:
+- **Data Profiler Agent**  
+  Detects rows, columns, date fields, revenue fields, spend fields, conversion fields, source fields, and status fields.
 
-```powershell
-cd frontend
-& 'C:\Program Files\nodejs\npm.cmd' install
-& 'C:\Program Files\nodejs\npm.cmd' run build
-& 'C:\Program Files\nodejs\npm.cmd' run preview -- --port 5173
-```
+- **Specialized Business Agents**  
+  Finance, Marketing, Operations, Risk, Customer/Onboarding, Trend, Forecast, Debate, Verification, Judge, and CEO agents.
 
-## Expected CSV Inputs
+- **Evidence-Based Claims**  
+  Agents use Pandas/NumPy calculations instead of relying only on LLM-style assumptions.
 
-The MVP works best with these columns:
+- **Debate and Verification Layer**  
+  Agent claims are challenged, checked against available metrics, and ranked by confidence.
 
-- `sales.csv`: `date`, `product`, `region`, `units_sold`, `revenue`, `cost`
-- `customers.csv`: `customer_id`, `region`, `signup_date`, `last_purchase_date`, `repeat_customer`
-- `inventory.csv`: `date`, `product`, `stock_level`, `stockout`, `demand`
-- `marketing.csv`: `date`, `region`, `campaign`, `spend`, `clicks`, `conversions`
+- **Decision Timeline**  
+  Shows how the system moved from planning to analysis, debate, verification, ranking, forecast, and final summary.
 
-Sample files are included in `data/sample`.
+- **Executive Decision Brief**  
+  Presents the primary cause, next recommended move, watch signal, risk, and optional full summary.
 
-## Flexible Upload Mode
+## Example Use Cases
 
-The React + FastAPI version supports:
+### Revenue Drop Analysis
 
-- `.csv`
-- `.xlsx`
-- `.xls`
-- single-sheet files
-- multi-sheet Excel workbooks
+Upload:
 
-BoardroomIQ profiles uploaded columns first. If a user uploads only one onboarding/customer sheet, it can still analyze:
+- `sales.csv`
+- `customers.csv`
+- `inventory.csv`
+- `marketing.csv`
+
+Ask:
+
+> Why did revenue drop this quarter?
+
+BoardroomIQ identifies whether the decline is mainly driven by revenue/margin pressure, conversion drop, stockouts, churn, or product dependency.
+
+### Customer Onboarding / Conversion Analysis
+
+Upload one sheet such as `onboarding.csv`.
+
+Ask:
+
+> How many booked customers did not convert, and can we estimate CAC?
+
+BoardroomIQ can detect:
 
 - total booked records
 - booked but not converted count
 - conversion rate
 - status breakdown
 - source/channel distribution
-- CAC when both spend and conversion columns exist
+- CAC when spend and conversion columns exist
 - timeline dips when a date column exists
 
-Example file: `data/sample/onboarding.csv`.
+## Agent Architecture
+
+| Agent | Role |
+|---|---|
+| Data Profiler Agent | Detects available fields and determines what analysis is possible |
+| Planner Agent | Breaks the business question into analysis tasks |
+| Finance Agent | Analyzes revenue, cost, margin, and payment signals |
+| Marketing Agent | Analyzes spend, conversions, source/channel performance, and CAC |
+| Operations Agent | Analyzes inventory, stockouts, demand gaps, and fulfillment risk |
+| Risk Agent | Analyzes churn, repeat customers, concentration, and dependency risks |
+| Customer / Onboarding Agent | Analyzes bookings, conversion status, and customer funnel movement |
+| Flexible Trend Agent | Detects dips or growth across time-based records |
+| Debate Agent | Challenges each agent's claim |
+| Verification Agent | Checks whether claims are supported by computed evidence |
+| Judge Agent | Ranks strongest explanations by confidence |
+| Forecast Agent | Projects near-term revenue or volume trends |
+| CEO Agent | Converts findings into an executive recommendation |
+
+## Tech Stack
+
+**AI / Agent Logic**
+
+- Python
+- Multi-agent workflow design
+- Evidence-based reasoning
+
+**Analytics**
+
+- Pandas
+- NumPy
+- Scikit-learn
+
+**Backend**
+
+- FastAPI
+- Uvicorn
+
+**Frontend**
+
+- React
+- Vite
+- Recharts
+- Lucide React
+
+**Prototype UI**
+
+- Streamlit
+
+## Project Structure
+
+```text
+BoardroomIQ/
+├── boardroomiq/
+│   ├── agents/
+│   ├── analytics/
+│   ├── core/
+│   ├── utils/
+│   └── api.py
+├── data/
+│   └── sample/
+├── frontend/
+│   └── src/
+├── app.py
+├── requirements.txt
+└── README.md
+```
+
+## How To Run
+
+### 1. Backend
+
+From the project root:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn boardroomiq.api:app --port 8000
+```
+
+Backend runs at:
+
+```text
+http://127.0.0.1:8000
+```
+
+Health check:
+
+```text
+http://127.0.0.1:8000/api/health
+```
+
+### 2. Frontend
+
+Open a second terminal:
+
+```powershell
+cd frontend
+& "C:\Program Files\nodejs\npm.cmd" run build
+& "C:\Program Files\nodejs\npm.cmd" run preview -- --port 5173
+```
+
+Frontend runs at:
+
+```text
+http://127.0.0.1:5173
+```
+
+## API Endpoints
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/health` | GET | Backend health check |
+| `/api/analyze/sample` | POST | Run analysis on bundled sample datasets |
+| `/api/analyze/upload` | POST | Upload CSV/Excel files and run flexible analysis |
+
+## Sample Data
+
+Sample files are included in `data/sample`:
+
+- `sales.csv`
+- `customers.csv`
+- `inventory.csv`
+- `marketing.csv`
+- `onboarding.csv`
+
+The onboarding sample is useful for testing customer booking, conversion, CAC, and funnel-drop questions.
+
+## How This Is Different From Uploading CSVs To ChatGPT/Claude
+
+Uploading a CSV to a general chatbot usually produces one conversational answer.
+
+BoardroomIQ creates a repeatable decision workflow:
+
+- profiles the data first
+- chooses relevant agents based on available columns
+- computes real metrics
+- challenges claims through debate
+- verifies evidence
+- ranks causes
+- exposes the decision timeline
+- produces an executive recommendation
+
+The goal is not just to answer a question. The goal is to show **how the decision was reached**.
+
+## Current Status
+
+**Version:** MVP / Product Prototype
+
+Completed:
+
+- multi-agent analytics pipeline
+- flexible CSV/Excel uploads
+- sample and custom-data analysis modes
+- FastAPI backend
+- React dashboard frontend
+- Streamlit prototype
+- evidence, confidence, debate, verification, forecast, and CEO summary layers
+
+Planned:
+
+- OpenAI/LangChain explanation layer
+- LangGraph orchestration
+- exportable PDF report
+- automated tests
+- Docker setup
+- deployment
+- screenshots and demo video
+
+## Resume Summary
+
+**BoardroomIQ: Autonomous Multi-Agent Business Intelligence Platform**
+
+Built an agentic AI business intelligence platform that analyzes CSV/Excel business data through specialized agents for finance, marketing, operations, risk, customer onboarding, debate, verification, forecasting, judging, and executive summarization. The system computes evidence-backed metrics, ranks likely causes with confidence scores, and produces explainable recommendations through a React + FastAPI product interface.
