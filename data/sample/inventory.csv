@@ -1,0 +1,25 @@
+date,product,stock_level,stockout,demand
+2026-01-05,Product A,210,0,160
+2026-01-12,Product B,135,0,96
+2026-01-19,Product C,115,0,82
+2026-01-26,Product A,190,0,150
+2026-02-02,Product B,128,0,100
+2026-02-09,Product A,175,0,162
+2026-02-16,Product C,104,0,86
+2026-02-23,Product A,170,0,154
+2026-03-02,Product B,122,0,98
+2026-03-09,Product A,168,0,164
+2026-03-16,Product C,100,0,90
+2026-03-23,Product A,160,1,170
+2026-04-06,Product A,105,1,158
+2026-04-13,Product B,98,0,94
+2026-04-20,Product C,82,1,88
+2026-04-27,Product A,78,1,156
+2026-05-04,Product B,84,1,96
+2026-05-11,Product A,62,1,160
+2026-05-18,Product C,78,1,86
+2026-05-25,Product A,58,1,158
+2026-06-01,Product B,80,1,98
+2026-06-08,Product A,50,1,166
+2026-06-15,Product C,72,1,84
+2026-06-22,Product A,45,1,168
