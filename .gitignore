@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+*.log
