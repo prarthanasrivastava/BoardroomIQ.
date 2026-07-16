@@ -114,6 +114,23 @@ nav {
   overflow-wrap: anywhere;
 }
 
+.llm-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  margin: 0 0 12px;
+  color: #dce8f7;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.llm-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #7dd3fc;
+}
+
 .brand-mark {
   font-weight: 800;
   font-size: 1.12rem;
@@ -312,6 +329,14 @@ button:disabled {
   letter-spacing: 0;
 }
 
+.enhanced-summary {
+  max-width: 920px;
+  margin: 12px 0 0;
+  color: #334155;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
 .brief-grid {
   display: grid;
   grid-template-columns: 0.8fr 1.35fr 0.75fr;
@@ -339,6 +364,28 @@ button:disabled {
   margin: 7px 0 0;
   color: #64748b;
   font-weight: 800;
+}
+
+.action-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.action-strip span {
+  padding: 8px 10px;
+  border-radius: 999px;
+  color: #075985;
+  background: #e0f2fe;
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.llm-status {
+  margin: 12px 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
 }
 
 .full-summary {

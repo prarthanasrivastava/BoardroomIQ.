@@ -254,15 +254,18 @@ function DecisionBrief({ report }) {
   const primary = report.ranked_causes?.[0];
   const secondary = report.ranked_causes?.[1];
   const forecast = report.forecast;
+  const llm = report.metadata?.llm;
+  const hasLlmBrief = llm?.enabled && llm?.status === "generated";
 
   if (!primary) return null;
 
   return (
     <section className="ceo-band">
       <div className="brief-heading">
-        <span>CEO Decision Brief</span>
-        <h2>{primary.claim}</h2>
+        <span>{hasLlmBrief ? "AI-Enhanced CEO Decision Brief" : "CEO Decision Brief"}</span>
+        <h2>{hasLlmBrief ? llm.headline : primary.claim}</h2>
       </div>
+      {hasLlmBrief && <p className="enhanced-summary">{llm.enhanced_summary}</p>}
       <div className="brief-grid">
         <article>
           <span>Primary Cause</span>
@@ -271,7 +274,7 @@ function DecisionBrief({ report }) {
         </article>
         <article>
           <span>Next Move</span>
-          <strong>{primary.recommendation}</strong>
+          <strong>{hasLlmBrief ? llm.action_items?.[0] || primary.recommendation : primary.recommendation}</strong>
         </article>
         <article>
           <span>Watch Signal</span>
@@ -279,6 +282,14 @@ function DecisionBrief({ report }) {
           <p>{forecast?.risk || primary.risk} risk</p>
         </article>
       </div>
+      {hasLlmBrief && !!llm.action_items?.length && (
+        <div className="action-strip">
+          {llm.action_items.slice(0, 3).map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </div>
+      )}
+      {llm && !hasLlmBrief && <p className="llm-status">AI explanation: {llm.reason}</p>}
       <details className="full-summary">
         <summary>View full executive summary</summary>
         <p>{report.ceo_summary}</p>
@@ -291,6 +302,7 @@ function App() {
   const [question, setQuestion] = useState("Why did revenue drop this quarter and what should we do?");
   const [mode, setMode] = useState("sample");
   const [files, setFiles] = useState([]);
+  const [useLlm, setUseLlm] = useState(false);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -306,6 +318,7 @@ function App() {
         }
         const formData = new FormData();
         formData.append("question", question);
+        formData.append("use_llm", String(useLlm));
         files.forEach((file) => formData.append("files", file));
         response = await fetch(UPLOAD_API_URL, {
           method: "POST",
@@ -315,7 +328,7 @@ function App() {
         response = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question }),
+          body: JSON.stringify({ question, use_llm: useLlm }),
         });
       }
       if (!response.ok) {
@@ -398,6 +411,10 @@ function App() {
                 <p>{files.length ? files.map((file) => file.name).join(", ") : "No files selected yet."}</p>
               </div>
             )}
+            <label className="llm-toggle">
+              <input type="checkbox" checked={useLlm} onChange={(event) => setUseLlm(event.target.checked)} />
+              <span>Use OpenAI explanation layer</span>
+            </label>
             <label htmlFor="question">Board question</label>
             <textarea id="question" value={question} onChange={(event) => setQuestion(event.target.value)} />
             <button onClick={runAnalysis} disabled={loading}>
