@@ -17,7 +17,9 @@ class BoardroomGraphState(TypedDict, total=False):
     findings: list[AgentFinding]
     debate: list[DebateChallenge]
     verification: list[VerificationResult]
+    evidence_gaps: list[str]
     ranked_causes: list[AgentFinding]
+    confidence_review: dict[str, Any]
     forecast: AgentFinding
     ceo_summary: str
     metadata: dict[str, Any]

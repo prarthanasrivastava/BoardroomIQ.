@@ -67,8 +67,8 @@ BoardroomIQ can analyze sales, customer, inventory, marketing, or onboarding dat
 - **Optional OpenAI Explanation Layer**  
   Converts computed agent findings into a sharper executive brief using the OpenAI Responses API, while keeping analytics as the source of truth.
 
-- **LangGraph Workflow Mode**  
-  Runs the boardroom process through explicit graph nodes for profiling, planning, specialist analysis, debate, verification, judging, forecasting, and CEO summary generation.
+- **Advanced LangGraph Workflow Mode**  
+  Runs the boardroom process through conditional graph nodes for profiling, planning, specialist routing, debate, verification, evidence-gap review, confidence review, forecasting, and CEO summary generation.
 
 ## Example Use Cases
 
@@ -255,20 +255,35 @@ profile_data
     |
 plan_analysis
     |
-run_specialists
+    +--> run_sample_specialists
     |
-run_debate
-    |
-run_verification
-    |
-run_judge
-    |
-run_forecast
-    |
-run_ceo
+    +--> run_flexible_specialists
+              |
+          run_debate
+              |
+          run_verification
+              |
+     +--------+---------+
+     |                  |
+evidence_gap_review   run_judge
+     |                  |
+     +-------> run_judge
+                    |
+           +--------+--------+
+           |                 |
+   confidence_review     run_forecast
+           |                 |
+           +-----> run_forecast
+                        |
+                    run_ceo
 ```
 
-This makes the agent workflow explicit and easier to extend with conditional routing, retries, human review, or more specialized agents later.
+This makes the agent workflow explicit and easier to extend. The current graph already supports:
+
+- routing sample data and uploaded flexible data through different specialist branches
+- evidence-gap review when claims are weak or only partially supported
+- confidence review when the top-ranked cause is below the executive threshold
+- metadata that exposes which graph gates were triggered
 
 ## Sample Data
 
@@ -311,14 +326,14 @@ Completed:
 - FastAPI backend
 - React dashboard frontend
 - optional OpenAI executive explanation layer
-- optional LangGraph workflow mode
+- optional advanced LangGraph workflow mode
 - Streamlit prototype
 - evidence, confidence, debate, verification, forecast, and CEO summary layers
 
 Planned:
 
 - LangChain explanation workflows
-- deeper LangGraph conditional routing
+- graph checkpointing and human review interrupts
 - exportable PDF report
 - automated tests
 - Docker setup

@@ -257,6 +257,8 @@ function DecisionBrief({ report }) {
   const llm = report.metadata?.llm;
   const hasLlmBrief = llm?.enabled && llm?.status === "generated";
   const workflow = report.metadata?.workflow || "python pipeline";
+  const evidenceGaps = report.metadata?.evidence_gaps || [];
+  const confidenceReview = report.metadata?.confidence_review;
 
   if (!primary) return null;
 
@@ -292,6 +294,16 @@ function DecisionBrief({ report }) {
         </div>
       )}
       {llm && !hasLlmBrief && <p className="llm-status">AI explanation: {llm.reason}</p>}
+      {!!evidenceGaps.length && (
+        <div className="graph-alert">
+          <strong>Evidence gate:</strong> {evidenceGaps.length} claim(s) need caution before executive action.
+        </div>
+      )}
+      {confidenceReview?.triggered && (
+        <div className="graph-alert">
+          <strong>Confidence gate:</strong> {confidenceReview.guidance}
+        </div>
+      )}
       <details className="full-summary">
         <summary>View full executive summary</summary>
         <p>{report.ceo_summary}</p>

@@ -401,6 +401,17 @@ button:disabled {
   font-size: 0.9rem;
 }
 
+.graph-alert {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  color: #713f12;
+  background: #fffbeb;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .full-summary {
   margin-top: 14px;
 }

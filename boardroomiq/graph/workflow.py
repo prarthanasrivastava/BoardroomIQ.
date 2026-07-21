@@ -45,22 +45,30 @@ def _plan_analysis(state: BoardroomGraphState) -> BoardroomGraphState:
     return {**state, "timeline": timeline}
 
 
-def _run_specialists(state: BoardroomGraphState) -> BoardroomGraphState:
+def _route_specialist_branch(state: BoardroomGraphState) -> str:
+    if state.get("mode") == "flexible_upload":
+        return "run_flexible_specialists"
+    return "run_sample_specialists"
+
+
+def _run_sample_specialists(state: BoardroomGraphState) -> BoardroomGraphState:
     data = state["data"]
-    mode = state.get("mode", "sample")
+    timeline = list(state["timeline"])
+    findings = [
+        FinanceAgent().run(data["sales"]),
+        MarketingAgent().run(data["marketing"]),
+        OperationsAgent().run(data["inventory"], data["sales"]),
+        RiskAgent().run(data["customers"], data["sales"]),
+    ]
+    timeline.extend([f"{finding.agent} completed analysis." for finding in findings])
+    timeline.append("LangGraph routed to fixed specialist agents for the complete business dataset.")
+    return {**state, "findings": findings, "timeline": timeline}
+
+
+def _run_flexible_specialists(state: BoardroomGraphState) -> BoardroomGraphState:
+    data = state["data"]
     findings: list = []
     timeline = list(state["timeline"])
-
-    if mode == "sample":
-        findings = [
-            FinanceAgent().run(data["sales"]),
-            MarketingAgent().run(data["marketing"]),
-            OperationsAgent().run(data["inventory"], data["sales"]),
-            RiskAgent().run(data["customers"], data["sales"]),
-        ]
-        timeline.extend([f"{finding.agent} completed analysis." for finding in findings])
-        return {**state, "findings": findings, "timeline": timeline}
-
     profiles = state["profiles"]
     findings.append(DataProfilerAgent().run(profiles))
     customer_agent = CustomerOnboardingAgent()
@@ -87,6 +95,7 @@ def _run_specialists(state: BoardroomGraphState) -> BoardroomGraphState:
         findings.append(trend_agent.run(next(iter(data.values())), profiles[0]))
         timeline.append("No specialist agent had enough signals, so BoardroomIQ produced basic profiling guidance.")
 
+    timeline.append("LangGraph routed to flexible specialists based on detected columns.")
     return {**state, "findings": findings, "timeline": timeline}
 
 
@@ -108,6 +117,28 @@ def _run_verification(state: BoardroomGraphState) -> BoardroomGraphState:
     }
 
 
+def _needs_evidence_gap_review(state: BoardroomGraphState) -> str:
+    weak_statuses = {"Weak evidence", "Partially valid"}
+    if any(item.status in weak_statuses for item in state["verification"]):
+        return "evidence_gap_review"
+    return "run_judge"
+
+
+def _evidence_gap_review(state: BoardroomGraphState) -> BoardroomGraphState:
+    weak_statuses = {"Weak evidence", "Partially valid"}
+    gaps = [
+        f"{item.agent}: {item.status} - {item.rationale}"
+        for item in state["verification"]
+        if item.status in weak_statuses
+    ]
+    timeline = list(state["timeline"])
+    if gaps:
+        timeline.append(f"Evidence Gap Review identified {len(gaps)} claim(s) needing caution.")
+    else:
+        timeline.append("Evidence Gap Review found no material evidence gaps.")
+    return {**state, "evidence_gaps": gaps, "timeline": timeline}
+
+
 def _run_judge(state: BoardroomGraphState) -> BoardroomGraphState:
     mode = state.get("mode", "sample")
     findings = state["findings"]
@@ -118,6 +149,28 @@ def _run_judge(state: BoardroomGraphState) -> BoardroomGraphState:
         **state,
         "ranked_causes": ranked_causes,
         "timeline": state["timeline"] + ["Judge Agent ranked the strongest explanations."],
+    }
+
+
+def _needs_confidence_review(state: BoardroomGraphState) -> str:
+    top = state["ranked_causes"][0] if state.get("ranked_causes") else None
+    if top and top.confidence < 75:
+        return "confidence_review"
+    return "run_forecast"
+
+
+def _confidence_review(state: BoardroomGraphState) -> BoardroomGraphState:
+    top = state["ranked_causes"][0]
+    review = {
+        "triggered": True,
+        "top_agent": top.agent,
+        "top_confidence": top.confidence,
+        "guidance": "Treat the final recommendation as directional because confidence is below the executive threshold.",
+    }
+    return {
+        **state,
+        "confidence_review": review,
+        "timeline": state["timeline"] + ["Confidence Review flagged the top cause as below the executive threshold."],
     }
 
 
@@ -140,17 +193,27 @@ def _run_ceo(state: BoardroomGraphState) -> BoardroomGraphState:
     metadata = {
         "mode": state.get("mode", "sample"),
         "profiles": profiles,
-        "workflow": "langgraph",
+        "workflow": "langgraph advanced",
         "graph_nodes": [
             "profile_data",
             "plan_analysis",
-            "run_specialists",
+            "run_sample_specialists",
+            "run_flexible_specialists",
             "run_debate",
             "run_verification",
+            "evidence_gap_review",
             "run_judge",
+            "confidence_review",
             "run_forecast",
             "run_ceo",
         ],
+        "conditional_routes": {
+            "specialist_branch": "sample dataset or flexible upload",
+            "evidence_gap_review": bool(state.get("evidence_gaps")),
+            "confidence_review": bool(state.get("confidence_review", {}).get("triggered")),
+        },
+        "evidence_gaps": state.get("evidence_gaps", []),
+        "confidence_review": state.get("confidence_review", {"triggered": False}),
     }
     return {
         **state,
@@ -164,20 +227,47 @@ def build_boardroom_graph():
     graph = StateGraph(BoardroomGraphState)
     graph.add_node("profile_data", _profile_data)
     graph.add_node("plan_analysis", _plan_analysis)
-    graph.add_node("run_specialists", _run_specialists)
+    graph.add_node("run_sample_specialists", _run_sample_specialists)
+    graph.add_node("run_flexible_specialists", _run_flexible_specialists)
     graph.add_node("run_debate", _run_debate)
     graph.add_node("run_verification", _run_verification)
+    graph.add_node("evidence_gap_review", _evidence_gap_review)
     graph.add_node("run_judge", _run_judge)
+    graph.add_node("confidence_review", _confidence_review)
     graph.add_node("run_forecast", _run_forecast)
     graph.add_node("run_ceo", _run_ceo)
 
     graph.set_entry_point("profile_data")
     graph.add_edge("profile_data", "plan_analysis")
-    graph.add_edge("plan_analysis", "run_specialists")
-    graph.add_edge("run_specialists", "run_debate")
+    graph.add_conditional_edges(
+        "plan_analysis",
+        _route_specialist_branch,
+        {
+            "run_sample_specialists": "run_sample_specialists",
+            "run_flexible_specialists": "run_flexible_specialists",
+        },
+    )
+    graph.add_edge("run_sample_specialists", "run_debate")
+    graph.add_edge("run_flexible_specialists", "run_debate")
     graph.add_edge("run_debate", "run_verification")
-    graph.add_edge("run_verification", "run_judge")
-    graph.add_edge("run_judge", "run_forecast")
+    graph.add_conditional_edges(
+        "run_verification",
+        _needs_evidence_gap_review,
+        {
+            "evidence_gap_review": "evidence_gap_review",
+            "run_judge": "run_judge",
+        },
+    )
+    graph.add_edge("evidence_gap_review", "run_judge")
+    graph.add_conditional_edges(
+        "run_judge",
+        _needs_confidence_review,
+        {
+            "confidence_review": "confidence_review",
+            "run_forecast": "run_forecast",
+        },
+    )
+    graph.add_edge("confidence_review", "run_forecast")
     graph.add_edge("run_forecast", "run_ceo")
     graph.add_edge("run_ceo", END)
     return graph.compile()
