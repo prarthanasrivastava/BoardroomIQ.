@@ -17,6 +17,8 @@ Uploaded CSV / Excel Data
         |
 Data Profiler Agent
         |
+LangGraph Orchestration
+        |
 Planner + Specialist Agents
         |
 Debate + Verification
@@ -64,6 +66,9 @@ BoardroomIQ can analyze sales, customer, inventory, marketing, or onboarding dat
 
 - **Optional OpenAI Explanation Layer**  
   Converts computed agent findings into a sharper executive brief using the OpenAI Responses API, while keeping analytics as the source of truth.
+
+- **LangGraph Workflow Mode**  
+  Runs the boardroom process through explicit graph nodes for profiling, planning, specialist analysis, debate, verification, judging, forecasting, and CEO summary generation.
 
 ## Example Use Cases
 
@@ -126,6 +131,7 @@ BoardroomIQ can detect:
 - Multi-agent workflow design
 - Evidence-based reasoning
 - Optional OpenAI Responses API explanation layer
+- LangGraph orchestration
 
 **Analytics**
 
@@ -157,6 +163,7 @@ BoardroomIQ/
 │   ├── agents/
 │   ├── analytics/
 │   ├── core/
+│   ├── graph/
 │   ├── llm/
 │   ├── utils/
 │   └── api.py
@@ -234,6 +241,35 @@ In the React UI, turn on **Use OpenAI explanation layer** before running the boa
 | `/api/analyze/sample` | POST | Run analysis on bundled sample datasets |
 | `/api/analyze/upload` | POST | Upload CSV/Excel files and run flexible analysis |
 
+Both analysis endpoints accept optional flags:
+
+- `use_graph`: run the LangGraph workflow instead of the direct Python pipeline
+- `use_llm`: attach the optional OpenAI executive explanation layer
+
+## LangGraph Workflow
+
+BoardroomIQ includes a graph orchestration path alongside the direct Python pipeline.
+
+```text
+profile_data
+    |
+plan_analysis
+    |
+run_specialists
+    |
+run_debate
+    |
+run_verification
+    |
+run_judge
+    |
+run_forecast
+    |
+run_ceo
+```
+
+This makes the agent workflow explicit and easier to extend with conditional routing, retries, human review, or more specialized agents later.
+
 ## Sample Data
 
 Sample files are included in `data/sample`:
@@ -275,13 +311,14 @@ Completed:
 - FastAPI backend
 - React dashboard frontend
 - optional OpenAI executive explanation layer
+- optional LangGraph workflow mode
 - Streamlit prototype
 - evidence, confidence, debate, verification, forecast, and CEO summary layers
 
 Planned:
 
 - LangChain explanation workflows
-- LangGraph orchestration
+- deeper LangGraph conditional routing
 - exportable PDF report
 - automated tests
 - Docker setup

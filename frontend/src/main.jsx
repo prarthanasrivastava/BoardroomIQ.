@@ -256,6 +256,7 @@ function DecisionBrief({ report }) {
   const forecast = report.forecast;
   const llm = report.metadata?.llm;
   const hasLlmBrief = llm?.enabled && llm?.status === "generated";
+  const workflow = report.metadata?.workflow || "python pipeline";
 
   if (!primary) return null;
 
@@ -264,6 +265,7 @@ function DecisionBrief({ report }) {
       <div className="brief-heading">
         <span>{hasLlmBrief ? "AI-Enhanced CEO Decision Brief" : "CEO Decision Brief"}</span>
         <h2>{hasLlmBrief ? llm.headline : primary.claim}</h2>
+        <em className="workflow-badge">{workflow}</em>
       </div>
       {hasLlmBrief && <p className="enhanced-summary">{llm.enhanced_summary}</p>}
       <div className="brief-grid">
@@ -303,6 +305,7 @@ function App() {
   const [mode, setMode] = useState("sample");
   const [files, setFiles] = useState([]);
   const [useLlm, setUseLlm] = useState(false);
+  const [useGraph, setUseGraph] = useState(false);
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -319,6 +322,7 @@ function App() {
         const formData = new FormData();
         formData.append("question", question);
         formData.append("use_llm", String(useLlm));
+        formData.append("use_graph", String(useGraph));
         files.forEach((file) => formData.append("files", file));
         response = await fetch(UPLOAD_API_URL, {
           method: "POST",
@@ -328,7 +332,7 @@ function App() {
         response = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question, use_llm: useLlm }),
+          body: JSON.stringify({ question, use_llm: useLlm, use_graph: useGraph }),
         });
       }
       if (!response.ok) {
@@ -414,6 +418,10 @@ function App() {
             <label className="llm-toggle">
               <input type="checkbox" checked={useLlm} onChange={(event) => setUseLlm(event.target.checked)} />
               <span>Use OpenAI explanation layer</span>
+            </label>
+            <label className="llm-toggle">
+              <input type="checkbox" checked={useGraph} onChange={(event) => setUseGraph(event.target.checked)} />
+              <span>Use LangGraph workflow</span>
             </label>
             <label htmlFor="question">Board question</label>
             <textarea id="question" value={question} onChange={(event) => setQuestion(event.target.value)} />

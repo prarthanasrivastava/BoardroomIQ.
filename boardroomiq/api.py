@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from boardroomiq.core.pipeline import run_boardroom_analysis, run_flexible_boardroom_analysis
+from boardroomiq.graph.workflow import run_boardroom_graph
 from boardroomiq.llm.explainer import attach_llm_explanation
 from boardroomiq.utils.data_loader import read_sample_data
 
@@ -18,6 +19,7 @@ from boardroomiq.utils.data_loader import read_sample_data
 class AnalyzeRequest(BaseModel):
     question: str = "Why did revenue drop this quarter and what should we do?"
     use_llm: bool = False
+    use_graph: bool = False
     llm_model: str | None = None
 
 
@@ -94,7 +96,11 @@ def health() -> dict[str, str]:
 
 @app.post("/api/analyze/sample")
 def analyze_sample(payload: AnalyzeRequest) -> dict[str, Any]:
-    report = run_boardroom_analysis(payload.question, read_sample_data())
+    data = read_sample_data()
+    if payload.use_graph:
+        report = run_boardroom_graph(payload.question, data, mode="sample")
+    else:
+        report = run_boardroom_analysis(payload.question, data)
     report = attach_llm_explanation(report, enabled=payload.use_llm, model=payload.llm_model)
     return to_jsonable(report)
 
@@ -103,10 +109,14 @@ def analyze_sample(payload: AnalyzeRequest) -> dict[str, Any]:
 async def analyze_upload(
     question: str = Form("What insights can you find from this business data?"),
     use_llm: bool = Form(False),
+    use_graph: bool = Form(False),
     llm_model: str | None = Form(None),
     files: list[UploadFile] = File(...),
 ) -> dict[str, Any]:
     data = await parse_uploads(files)
-    report = run_flexible_boardroom_analysis(question, data)
+    if use_graph:
+        report = run_boardroom_graph(question, data, mode="flexible_upload")
+    else:
+        report = run_flexible_boardroom_analysis(question, data)
     report = attach_llm_explanation(report, enabled=use_llm, model=llm_model)
     return to_jsonable(report)
